@@ -6,12 +6,14 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useData, useTheme } from '../contexts';
 import { validateNonEmptyString } from '../services';
 import { Category } from '../models';
+import { useToast } from '../utils/Toast';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 type CategoryManagerScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CategoryManager'>;
 
@@ -32,6 +34,7 @@ export const CategoryManagerScreen: React.FC<CategoryManagerScreenProps> = ({ na
   
   const { categories, addCategory } = useData();
   const { theme } = useTheme();
+  const toast = useToast();
 
   /**
    * Handle category name input change
@@ -65,25 +68,15 @@ export const CategoryManagerScreen: React.FC<CategoryManagerScreenProps> = ({ na
       // Create category (Requirement 4.2)
       await addCategory(categoryName);
       
-      // Show success feedback
-      Alert.alert(
-        'Success',
-        `Category "${categoryName}" created successfully!`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Clear form
-              setCategoryName('');
-              setError(undefined);
-            },
-          },
-        ]
-      );
+      // Show success toast
+      toast.showSuccess(`Category "${categoryName}" created successfully!`);
+      
+      // Clear form
+      setCategoryName('');
+      setError(undefined);
     } catch (err) {
       // Handle storage or other errors
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create category';
-      Alert.alert('Error', errorMessage);
+      ErrorHandler.handle(err, 'creating category');
     } finally {
       setIsSubmitting(false);
     }

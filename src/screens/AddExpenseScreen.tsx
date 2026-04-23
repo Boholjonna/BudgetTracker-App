@@ -6,12 +6,14 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useData, useTheme } from '../contexts';
 import { validatePositiveNumber } from '../services';
+import { useToast } from '../utils/Toast';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 type AddExpenseScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddExpense'>;
 
@@ -34,6 +36,7 @@ export const AddExpenseScreen: React.FC<AddExpenseScreenProps> = ({ navigation }
   
   const { addExpense, categories } = useData();
   const { theme } = useTheme();
+  const toast = useToast();
 
   /**
    * Handle amount input change with validation
@@ -96,28 +99,18 @@ export const AddExpenseScreen: React.FC<AddExpenseScreenProps> = ({ navigation }
       const selectedCategory = categories.find(cat => cat.id === categoryId);
       const categoryName = selectedCategory?.name || 'Unknown';
       
-      // Show success feedback
-      Alert.alert(
-        'Success',
-        `Expense of $${numericAmount.toFixed(2)} in category "${categoryName}" added successfully!`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Clear form and navigate back
-              setAmount('');
-              setCategoryId('');
-              setAmountError(undefined);
-              setCategoryError(undefined);
-              navigation.goBack();
-            },
-          },
-        ]
-      );
+      // Show success toast
+      toast.showSuccess(`Expense of $${numericAmount.toFixed(2)} in "${categoryName}" added successfully!`);
+      
+      // Clear form and navigate back
+      setAmount('');
+      setCategoryId('');
+      setAmountError(undefined);
+      setCategoryError(undefined);
+      navigation.goBack();
     } catch (err) {
       // Handle storage or other errors (Requirement 10.3)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add expense';
-      Alert.alert('Error', errorMessage);
+      ErrorHandler.handle(err, 'adding expense');
     } finally {
       setIsSubmitting(false);
     }

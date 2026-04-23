@@ -6,11 +6,13 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useData, useTheme } from '../contexts';
 import { validatePositiveNumber } from '../services';
+import { useToast } from '../utils/Toast';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 type AddEarningScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddEarning'>;
 
@@ -31,6 +33,7 @@ export const AddEarningScreen: React.FC<AddEarningScreenProps> = ({ navigation }
   
   const { addEarning } = useData();
   const { theme } = useTheme();
+  const toast = useToast();
 
   /**
    * Handle amount input change with validation
@@ -65,26 +68,16 @@ export const AddEarningScreen: React.FC<AddEarningScreenProps> = ({ navigation }
       const numericAmount = parseFloat(amount);
       await addEarning(numericAmount);
       
-      // Show success feedback
-      Alert.alert(
-        'Success',
-        `Earning of $${numericAmount.toFixed(2)} added successfully!`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Clear form and navigate back
-              setAmount('');
-              setError(undefined);
-              navigation.goBack();
-            },
-          },
-        ]
-      );
+      // Show success toast
+      toast.showSuccess(`Earning of $${numericAmount.toFixed(2)} added successfully!`);
+      
+      // Clear form and navigate back
+      setAmount('');
+      setError(undefined);
+      navigation.goBack();
     } catch (err) {
       // Handle storage or other errors (Requirement 10.3)
-      const errorMessage = err instanceof Error ? err.message : 'Failed to add earning';
-      Alert.alert('Error', errorMessage);
+      ErrorHandler.handle(err, 'adding earning');
     } finally {
       setIsSubmitting(false);
     }

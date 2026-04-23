@@ -10,6 +10,8 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'rea
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme } from '../contexts';
+import { useToast } from '../utils/Toast';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
@@ -41,6 +43,7 @@ const THEME_COLORS = [
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   const { theme, setTheme, resetToDefault } = useTheme();
   const [isUpdating, setIsUpdating] = useState(false);
+  const toast = useToast();
 
   /**
    * Handle theme color selection
@@ -53,11 +56,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
       // Apply theme (Requirement 7.3, 7.4)
       await setTheme(color);
       
-      // Show success feedback
-      Alert.alert('Success', `Theme changed to ${colorName}`);
+      // Show success toast
+      toast.showSuccess(`Theme changed to ${colorName}`);
     } catch (error) {
-      console.error('Failed to set theme:', error);
-      Alert.alert('Error', 'Failed to update theme. Please try again.');
+      ErrorHandler.handle(error, 'updating theme');
     } finally {
       setIsUpdating(false);
     }
@@ -80,7 +82,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           text: 'Reset',
           onPress: () => {
             resetToDefault();
-            Alert.alert('Success', 'Theme reset to default green');
+            toast.showSuccess('Theme reset to default green');
           },
         },
       ]

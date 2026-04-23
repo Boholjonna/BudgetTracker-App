@@ -13,6 +13,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useData, useTheme } from '../contexts';
 import { dataManager } from '../managers';
+import { useToast } from '../utils/Toast';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 type DataManagementScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DataManagement'>;
 
@@ -31,6 +33,7 @@ type DeletionMode = 'month' | 'dateRange';
 export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navigation }) => {
   const { refreshData } = useData();
   const { theme } = useTheme();
+  const toast = useToast();
 
   // Deletion mode
   const [mode, setMode] = useState<DeletionMode>('month');
@@ -194,7 +197,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ navi
       );
     } catch (error) {
       console.error('Failed to delete data:', error);
-      Alert.alert('Error', 'Failed to delete data. Please try again.');
+      ErrorHandler.handle(error, 'deleting data');
     } finally {
       setIsDeleting(false);
     }

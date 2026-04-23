@@ -12,6 +12,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme } from '../contexts';
 import { analyticsEngine } from '../managers';
 import { CategorySpending } from '../models';
+import { ErrorHandler } from '../utils/ErrorHandler';
 
 type AnalyticsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Analytics'>;
 
@@ -56,7 +57,7 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ navigation }) 
       setCategorySpending(spending);
       setTotalSpending(total);
     } catch (error) {
-      console.error('Failed to load analytics:', error);
+      ErrorHandler.handle(error, 'loading analytics');
     } finally {
       setIsLoading(false);
     }
