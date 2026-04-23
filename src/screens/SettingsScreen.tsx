@@ -20,6 +20,22 @@ interface SettingsScreenProps {
 }
 
 /**
+ * Predefined currency options
+ */
+const CURRENCIES = [
+  { symbol: '$', name: 'US Dollar (USD)', code: 'USD' },
+  { symbol: '€', name: 'Euro (EUR)', code: 'EUR' },
+  { symbol: '£', name: 'British Pound (GBP)', code: 'GBP' },
+  { symbol: '¥', name: 'Japanese Yen (JPY)', code: 'JPY' },
+  { symbol: '₹', name: 'Indian Rupee (INR)', code: 'INR' },
+  { symbol: '₱', name: 'Philippine Peso (PHP)', code: 'PHP' },
+  { symbol: 'R$', name: 'Brazilian Real (BRL)', code: 'BRL' },
+  { symbol: 'C$', name: 'Canadian Dollar (CAD)', code: 'CAD' },
+  { symbol: 'A$', name: 'Australian Dollar (AUD)', code: 'AUD' },
+  { symbol: 'Fr', name: 'Swiss Franc (CHF)', code: 'CHF' },
+];
+
+/**
  * Predefined theme color options
  * Requirements: 7.2
  */
@@ -41,9 +57,28 @@ const THEME_COLORS = [
  * Requirements: 7.1, 7.2, 7.3, 7.4, 7.5
  */
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
-  const { theme, setTheme, resetToDefault } = useTheme();
+  const { theme, setTheme, setCurrency, resetToDefault } = useTheme();
   const [isUpdating, setIsUpdating] = useState(false);
   const toast = useToast();
+
+  /**
+   * Handle currency selection
+   */
+  const handleCurrencySelect = async (currency: string, currencyName: string) => {
+    try {
+      setIsUpdating(true);
+      
+      // Update currency
+      await setCurrency(currency);
+      
+      // Show success toast
+      toast.showSuccess(`Currency changed to ${currencyName}`);
+    } catch (error) {
+      ErrorHandler.handle(error, 'updating currency');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   /**
    * Handle theme color selection
@@ -103,6 +138,42 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
               ]}
             />
             <Text style={styles.currentThemeColorCode}>{theme.primaryColor}</Text>
+          </View>
+          <Text style={styles.currencyDisplay}>Currency: {theme.currency}</Text>
+        </View>
+
+        {/* Currency Selection */}
+        <View style={styles.colorsSection}>
+          <Text style={styles.sectionTitle}>💱 Currency</Text>
+          <Text style={styles.sectionSubtitle}>
+            Select your preferred currency symbol
+          </Text>
+
+          <View style={styles.currencyGrid}>
+            {CURRENCIES.map((curr) => {
+              const isSelected = theme.currency === curr.symbol;
+              
+              return (
+                <TouchableOpacity
+                  key={curr.code}
+                  style={[
+                    styles.currencyOption,
+                    isSelected && styles.currencyOptionSelected,
+                  ]}
+                  onPress={() => handleCurrencySelect(curr.symbol, curr.name)}
+                  disabled={isUpdating}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.currencySymbol}>{curr.symbol}</Text>
+                  <Text style={styles.currencyName}>{curr.code}</Text>
+                  {isSelected && (
+                    <View style={styles.selectedBadge}>
+                      <Text style={styles.selectedBadgeText}>✓</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -215,6 +286,62 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+  },
+  currencyDisplay: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+    fontWeight: '500',
+  },
+  currencyGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  currencyOption: {
+    width: '30%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    position: 'relative',
+  },
+  currencyOptionSelected: {
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    backgroundColor: '#f1f8f4',
+  },
+  currencySymbol: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  currencyName: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  selectedBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#4CAF50',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   colorsSection: {
     marginBottom: 24,

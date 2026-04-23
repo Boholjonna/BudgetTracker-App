@@ -134,7 +134,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             {isLoading ? (
               <Text style={styles.statValue}>...</Text>
             ) : (
-              <Text style={styles.statValue}>${availableFunds.toFixed(0)}</Text>
+              <Text style={styles.statValue}>{theme.currency}{availableFunds.toFixed(0)}</Text>
             )}
             <Text style={styles.statSubtext}>Current Balance</Text>
           </LinearGradient>
@@ -147,7 +147,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             end={{ x: 1, y: 1 }}
           >
             <Text style={styles.statLabel}>Avg/Day</Text>
-            <Text style={styles.statValue}>${averageSpending.toFixed(0)}</Text>
+            <Text style={styles.statValue}>{theme.currency}{averageSpending.toFixed(0)}</Text>
             <Text style={styles.statSubtext}>Daily Spending</Text>
           </LinearGradient>
         </View>
@@ -203,7 +203,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     </View>
                   </View>
                   <View style={styles.categoryAmount}>
-                    <Text style={styles.amountText}>${item.totalAmount.toFixed(0)}</Text>
+                    <Text style={styles.amountText}>{theme.currency}{item.totalAmount.toFixed(0)}</Text>
                     <Text style={styles.percentText}>{item.percentage.toFixed(1)}%</Text>
                   </View>
                 </View>
@@ -258,8 +258,8 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 30,
-    paddingTop: 20,
-    paddingBottom: 40,
+    paddingTop: 50,
+    paddingBottom: 30,
   },
   headerTitle: {
     fontSize: 32,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    marginTop: -20,
+    marginTop: 10,
   },
   statsRow: {
     flexDirection: 'row',

@@ -53,6 +53,8 @@ export interface Category {
 export interface Theme {
   /** Primary theme color (hex color code) */
   primaryColor: string;
+  /** Currency symbol for display */
+  currency: string;
 }
 
 /**

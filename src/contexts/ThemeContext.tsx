@@ -22,6 +22,7 @@ interface ThemeContextState {
   
   // Actions
   setTheme: (color: string) => Promise<void>;
+  setCurrency: (currency: string) => Promise<void>;
   resetToDefault: () => Theme;
 }
 
@@ -78,13 +79,35 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
    */
   const setTheme = useCallback(async (color: string): Promise<void> => {
     try {
+      // Get current currency
+      const currentCurrency = theme.currency;
+      
       // Persist theme using theme manager
-      await themeManager.setTheme(color);
+      await themeManager.setTheme(color, currentCurrency);
       
       // Update local state
-      setThemeState({ primaryColor: color });
+      setThemeState({ primaryColor: color, currency: currentCurrency });
     } catch (error) {
       console.error('Failed to set theme:', error);
+      throw error;
+    }
+  }, [theme.currency]);
+
+  /**
+   * Set and persist currency symbol
+   * Requirements: 7.5
+   * 
+   * @param currency - Currency symbol
+   */
+  const setCurrency = useCallback(async (currency: string): Promise<void> => {
+    try {
+      // Persist currency using theme manager
+      await themeManager.setCurrency(currency);
+      
+      // Update local state
+      setThemeState(prev => ({ ...prev, currency }));
+    } catch (error) {
+      console.error('Failed to set currency:', error);
       throw error;
     }
   }, []);
@@ -100,7 +123,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     setThemeState(defaultTheme);
     
     // Persist default theme asynchronously
-    themeManager.setTheme(defaultTheme.primaryColor).catch((error) => {
+    themeManager.setTheme(defaultTheme.primaryColor, defaultTheme.currency).catch((error) => {
       console.error('Failed to persist default theme:', error);
     });
     
@@ -111,6 +134,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     theme,
     isLoading,
     setTheme,
+    setCurrency,
     resetToDefault,
   };
 

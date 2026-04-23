@@ -66,8 +66,7 @@ export const AppNavigator: React.FC = () => {
           name="Home"
           component={HomeScreen}
           options={{
-            title: 'Budget Tracker',
-            headerShown: true,
+            headerShown: false,
           }}
         />
         <Stack.Screen
