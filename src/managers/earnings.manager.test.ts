@@ -18,8 +18,8 @@ jest.mock('../services/storage.service', () => ({
 }));
 
 // Mock uuid
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'test-uuid-1234'),
+jest.mock('../utils/uuid', () => ({
+  generateUUID: jest.fn(() => 'test-uuid-1234'),
 }));
 
 describe('EarningsManager', () => {
@@ -69,8 +69,8 @@ describe('EarningsManager', () => {
     });
 
     it('should generate unique IDs for each earning', async () => {
-      const { v4: uuidv4 } = require('uuid');
-      uuidv4.mockReturnValueOnce('uuid-1').mockReturnValueOnce('uuid-2');
+      const { generateUUID } = require('../utils/uuid');
+      generateUUID.mockReturnValueOnce('uuid-1').mockReturnValueOnce('uuid-2');
 
       const result1 = await earningsManager.addEarning(100);
       const result2 = await earningsManager.addEarning(200);

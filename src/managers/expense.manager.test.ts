@@ -26,8 +26,8 @@ jest.mock('./category.manager', () => ({
 }));
 
 // Mock uuid
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'test-uuid-1234'),
+jest.mock('../utils/uuid', () => ({
+  generateUUID: jest.fn(() => 'test-uuid-1234'),
 }));
 
 describe('ExpenseTracker', () => {
@@ -125,8 +125,8 @@ describe('ExpenseTracker', () => {
     });
 
     it('should generate unique IDs for each expense', async () => {
-      const { v4: uuidv4 } = require('uuid');
-      uuidv4.mockReturnValueOnce('uuid-1').mockReturnValueOnce('uuid-2');
+      const { generateUUID } = require('../utils/uuid');
+      generateUUID.mockReturnValueOnce('uuid-1').mockReturnValueOnce('uuid-2');
 
       const result1 = await expenseTracker.addExpense(100, 'cat_food');
       const result2 = await expenseTracker.addExpense(200, 'cat_transport');
