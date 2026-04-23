@@ -5,10 +5,10 @@
  * Requirements: 1.1, 1.2, 1.3, 1.4
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import { EarningEntry, ValidationResult } from '../models';
 import { storageService } from '../services/storage.service';
 import { validatePositiveNumber } from '../services/validation.service';
+import { generateUUID } from '../utils/uuid';
 
 /**
  * Earnings Manager Interface
@@ -37,8 +37,8 @@ class EarningsManagerImpl implements EarningsManager {
       throw new Error('Amount must be greater than zero');
     }
 
-    // Generate unique ID using UUID v4
-    const id = uuidv4();
+    // Generate unique ID using expo-crypto
+    const id = generateUUID();
 
     // Generate timestamp (Unix timestamp in milliseconds)
     const timestamp = Date.now();

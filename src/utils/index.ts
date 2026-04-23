@@ -6,3 +6,4 @@
 
 export * from './ErrorHandler';
 export * from './Toast';
+export * from './uuid';

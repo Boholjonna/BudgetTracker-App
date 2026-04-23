@@ -15,7 +15,7 @@ import { useData, useTheme } from '../contexts';
 import { analyticsEngine } from '../managers/analytics.manager';
 import { CategorySpending } from '../models';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, parseISO } from 'date-fns';
+import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -60,7 +60,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           const dayStr = format(day, 'yyyy-MM-dd');
           return expenses
             .filter(expense => {
-              const expenseDate = format(parseISO(expense.timestamp), 'yyyy-MM-dd');
+              // Convert Unix timestamp to Date object
+              const expenseDate = format(new Date(expense.timestamp), 'yyyy-MM-dd');
               return expenseDate === dayStr;
             })
             .reduce((sum, expense) => sum + expense.amount, 0);

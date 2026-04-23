@@ -5,10 +5,10 @@
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import { Category, ValidationResult } from '../models';
 import { storageService } from '../services/storage.service';
 import { validateNonEmptyString } from '../services/validation.service';
+import { generateUUID } from '../utils/uuid';
 
 /**
  * Default categories provided by the system
@@ -49,8 +49,8 @@ class CategoryManagerImpl implements CategoryManager {
       throw new Error(validation.error || 'Invalid category name');
     }
 
-    // Generate unique ID using UUID v4
-    const id = uuidv4();
+    // Generate unique ID using expo-crypto
+    const id = generateUUID();
 
     // Create category (custom categories are not default)
     const category: Category = {

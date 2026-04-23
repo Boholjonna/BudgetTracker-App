@@ -5,11 +5,11 @@
  * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 10.5
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import { ExpenseEntry, ValidationResult } from '../models';
 import { storageService } from '../services/storage.service';
 import { validatePositiveNumber } from '../services/validation.service';
 import { categoryManager } from './category.manager';
+import { generateUUID } from '../utils/uuid';
 
 /**
  * Expense Tracker Interface
@@ -53,8 +53,8 @@ class ExpenseTrackerImpl implements ExpenseTracker {
       throw new Error('Invalid category ID: category does not exist');
     }
 
-    // Generate unique ID using UUID v4
-    const id = uuidv4();
+    // Generate unique ID using expo-crypto
+    const id = generateUUID();
 
     // Generate timestamp (Unix timestamp in milliseconds)
     const timestamp = Date.now();
