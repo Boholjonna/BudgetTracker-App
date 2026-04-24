@@ -272,6 +272,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     { title: 'Add Earning', screen: 'AddEarning' as const, icon: '+', colors: ['#4CAF50', '#45a049'] as const },
     { title: 'Add Expense', screen: 'AddExpense' as const, icon: '−', colors: ['#f44336', '#da190b'] as const },
     { title: 'Budget', screen: 'BudgetEstimator' as const, icon: '◯', colors: ['#2196F3', '#0b7dda'] as const },
+    { title: 'Payments', screen: 'Payments' as const, icon: '💳', colors: ['#FF9800', '#F57C00'] as const },
     { title: 'Settings', screen: 'Settings' as const, icon: '⚙', colors: ['#9C27B0', '#7b1fa2'] as const },
   ];
 

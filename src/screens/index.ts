@@ -12,3 +12,4 @@ export { CategoryManagerScreen } from './CategoryManagerScreen';
 export { AnalyticsScreen } from './AnalyticsScreen';
 export { DataManagementScreen } from './DataManagementScreen';
 export { SettingsScreen } from './SettingsScreen';
+export { PaymentsScreen } from './PaymentsScreen';

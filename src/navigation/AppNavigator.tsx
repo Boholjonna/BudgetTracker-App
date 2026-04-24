@@ -19,6 +19,7 @@ import {
   AnalyticsScreen,
   DataManagementScreen,
   SettingsScreen,
+  PaymentsScreen,
 } from '../screens';
 
 /**
@@ -34,6 +35,7 @@ export type RootStackParamList = {
   CategoryManager: undefined;
   DataManagement: undefined;
   Settings: undefined;
+  Payments: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -122,6 +124,14 @@ export const AppNavigator: React.FC = () => {
           component={SettingsScreen}
           options={{
             title: 'Settings',
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="Payments"
+          component={PaymentsScreen}
+          options={{
+            title: 'Recurring Payments',
             headerShown: true,
           }}
         />
