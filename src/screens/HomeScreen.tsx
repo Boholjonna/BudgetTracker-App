@@ -204,13 +204,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     legendFontSize: 0,
                   }))}
                   width={screenWidth - 40}
-                  height={240}
+                  height={220}
                   chartConfig={{
                     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                   }}
                   accessor="population"
                   backgroundColor="transparent"
-                  paddingLeft="0"
+                  paddingLeft={(screenWidth - 40 - 220) / 2 + 13}
                   absolute
                   hasLegend={false}
                 />
