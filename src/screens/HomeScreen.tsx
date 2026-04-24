@@ -14,7 +14,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useData, useTheme } from '../contexts';
 import { analyticsEngine } from '../managers/analytics.manager';
 import { CategorySpending } from '../models';
-import { LineChart, BarChart } from 'react-native-chart-kit';
+import { LineChart, PieChart } from 'react-native-chart-kit';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
@@ -182,43 +182,53 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           />
         </View>
 
-        {/* Top Categories with Bar Chart */}
+        {/* Top Categories with Pie Chart */}
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>🏆 Top Spending Categories</Text>
           {categorySpending.length > 0 ? (
             <>
-              {/* Bar Chart */}
-              <BarChart
-                data={{
-                  labels: categorySpending.map(item => item.category.name.substring(0, 8)),
-                  datasets: [{
-                    data: categorySpending.map(item => item.totalAmount),
-                  }],
-                }}
-                width={screenWidth - 60}
-                height={220}
-                withLegend={false}
-                withInnerLines={false}
+              {/* Pie Chart */}
+              <PieChart
+                data={categorySpending.map((item, index) => ({
+                  name: '',
+                  population: item.totalAmount,
+                  color: [
+                    gradientStart,
+                    '#FF6B6B',
+                    '#4ECDC4',
+                    '#FFD93D',
+                    '#A8E6CF',
+                  ][index % 5],
+                  legendFontColor: 'transparent',
+                  legendFontSize: 0,
+                }))}
+                width={screenWidth - 40}
+                height={280}
                 chartConfig={{
-                  backgroundColor: '#ffffff',
-                  backgroundGradientFrom: '#ffffff',
-                  backgroundGradientTo: '#f8f9fa',
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(${parseInt(gradientStart.slice(1, 3), 16)}, ${parseInt(gradientStart.slice(3, 5), 16)}, ${parseInt(gradientStart.slice(5, 7), 16)}, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  style: { borderRadius: 16 },
+                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                 }}
-                style={styles.chart}
-                showValuesOnTopOfBars
-                fromZero
+                accessor="population"
+                backgroundColor="transparent"
+                paddingLeft="0"
+                center={[(screenWidth - 40) / 2 - 80, 0]}
+                absolute
+                hasLegend={false}
               />
               
               {/* Category List */}
               <View style={styles.categoriesList}>
                 {categorySpending.map((item, index) => (
                   <View key={item.category.id} style={styles.categoryItem}>
-                    <View style={styles.categoryRank}>
-                      <Text style={styles.rankText}>#{index + 1}</Text>
+                    <View style={[styles.categoryRank, {
+                      backgroundColor: [
+                        gradientStart,
+                        '#FF6B6B',
+                        '#4ECDC4',
+                        '#FFD93D',
+                        '#A8E6CF',
+                      ][index % 5]
+                    }]}>
+                      <Text style={styles.rankTextWhite}>#{index + 1}</Text>
                     </View>
                     <View style={styles.categoryInfo}>
                       <Text style={styles.categoryName}>{item.category.name}</Text>
@@ -383,6 +393,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#666',
+  },
+  rankTextWhite: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   categoryInfo: {
     flex: 1,
