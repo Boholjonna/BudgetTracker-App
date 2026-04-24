@@ -210,7 +210,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   }}
                   accessor="population"
                   backgroundColor="transparent"
-                  paddingLeft="50"
+                  paddingLeft="70"
                   absolute
                   hasLegend={false}
                 />
