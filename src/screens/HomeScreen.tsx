@@ -71,6 +71,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   useEffect(() => {
     const loadAnalytics = async () => {
       try {
+        // Calculate daily payment impact once at the start
+        const dailyPaymentImpact = getDailyPaymentImpact();
+        
         // Get category spending
         const spending = await analyticsEngine.getCategorySpending();
         setCategorySpending(spending.slice(0, 5)); // Top 5 categories
@@ -80,7 +83,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         const weekEnd = endOfWeek(selectedWeekStart, { weekStartsOn: 1 });
         const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-        const dailyPaymentImpact = getDailyPaymentImpact();
         const dailySpending = daysInWeek.map(day => {
           const dayStr = format(day, 'yyyy-MM-dd');
           const expenseTotal = expenses
@@ -99,7 +101,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
         // Calculate average daily spending (including recurring payments)
         const totalSpending = await analyticsEngine.getTotalSpending();
-        const dailyPaymentImpact = getDailyPaymentImpact();
         const daysWithExpenses = expenses.length > 0 ? 7 : 1; // Avoid division by zero
         setAverageSpending((totalSpending / daysWithExpenses) + dailyPaymentImpact);
 
