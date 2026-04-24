@@ -188,32 +188,33 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {categorySpending.length > 0 ? (
             <>
               {/* Pie Chart */}
-              <PieChart
-                data={categorySpending.map((item, index) => ({
-                  name: '',
-                  population: item.totalAmount,
-                  color: [
-                    gradientStart,
-                    '#FF6B6B',
-                    '#4ECDC4',
-                    '#FFD93D',
-                    '#A8E6CF',
-                  ][index % 5],
-                  legendFontColor: 'transparent',
-                  legendFontSize: 0,
-                }))}
-                width={screenWidth - 40}
-                height={280}
-                chartConfig={{
-                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                }}
-                accessor="population"
-                backgroundColor="transparent"
-                paddingLeft="0"
-                center={[(screenWidth - 40) / 2 - 80, 0]}
-                absolute
-                hasLegend={false}
-              />
+              <View style={styles.pieChartContainer}>
+                <PieChart
+                  data={categorySpending.map((item, index) => ({
+                    name: '',
+                    population: item.totalAmount,
+                    color: [
+                      gradientStart,
+                      '#FF6B6B',
+                      '#4ECDC4',
+                      '#FFD93D',
+                      '#A8E6CF',
+                    ][index % 5],
+                    legendFontColor: 'transparent',
+                    legendFontSize: 0,
+                  }))}
+                  width={screenWidth}
+                  height={280}
+                  chartConfig={{
+                    color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                  }}
+                  accessor="population"
+                  backgroundColor="transparent"
+                  paddingLeft="50"
+                  absolute
+                  hasLegend={false}
+                />
+              </View>
               
               {/* Category List */}
               <View style={styles.categoriesList}>
@@ -371,6 +372,11 @@ const styles = StyleSheet.create({
   chart: {
     marginVertical: 8,
     borderRadius: 16,
+  },
+  pieChartContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 8,
   },
   categoriesList: {
     gap: 16,
