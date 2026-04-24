@@ -36,7 +36,7 @@ const screenWidth = Dimensions.get('window').width;
  * Requirements: 1.3, 2.4, 5.1, 5.2, 5.3, 5.4
  */
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
-  const { availableFunds, expenses, earnings, isLoading } = useData();
+  const { availableFunds, expenses, earnings, recurringPayments, isLoading } = useData();
   const { theme } = useTheme();
   const [categorySpending, setCategorySpending] = useState<CategorySpending[]>([]);
   const [weeklyData, setWeeklyData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
@@ -50,6 +50,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [balanceTrend, setBalanceTrend] = useState<{ percentage: number; isIncrease: boolean }>({ percentage: 0, isIncrease: true });
   const [spendingTrendAmount, setSpendingTrendAmount] = useState<number>(0);
   const [incomeTrendAmount, setIncomeTrendAmount] = useState<number>(0);
+
+  // Helper function to calculate daily impact from recurring payments
+  const getDailyPaymentImpact = () => {
+    const frequencyDays: Record<string, number> = {
+      'weekly': 7,
+      'bi-weekly': 14,
+      'monthly': 30,
+      'quarterly': 90,
+      'yearly': 365,
+    };
+    
+    return recurringPayments.reduce((total, payment) => {
+      const days = frequencyDays[payment.frequency] || 30;
+      return total + (payment.amount / days);
+    }, 0);
+  };
 
   // Calculate analytics data
   useEffect(() => {
@@ -77,10 +93,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
         setWeeklyData(dailySpending);
 
-        // Calculate average daily spending
+        // Calculate average daily spending (including recurring payments)
         const totalSpending = await analyticsEngine.getTotalSpending();
+        const dailyPaymentImpact = getDailyPaymentImpact();
         const daysWithExpenses = expenses.length > 0 ? 7 : 1; // Avoid division by zero
-        setAverageSpending(totalSpending / daysWithExpenses);
+        setAverageSpending((totalSpending / daysWithExpenses) + dailyPaymentImpact);
 
         // Calculate average daily income (average of earning amounts)
         const totalEarnings = earnings.reduce((sum, earning) => sum + earning.amount, 0);
@@ -266,7 +283,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     if (!isLoading) {
       loadAnalytics();
     }
-  }, [expenses, earnings, isLoading, selectedWeekStart, trendPeriod]);
+  }, [expenses, earnings, recurringPayments, isLoading, selectedWeekStart, trendPeriod]);
 
   const quickActions = [
     { title: 'Add Earning', screen: 'AddEarning' as const, icon: '+', colors: ['#4CAF50', '#45a049'] as const },
@@ -394,8 +411,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             end={{ x: 1, y: 1 }}
           >
             <Text style={styles.statLabel}>Daily Budget</Text>
-            <Text style={styles.statValue}>{theme.currency}{(availableFunds / 30).toFixed(0)}</Text>
-            <Text style={styles.statSubtext}>Next 30 Days</Text>
+            <Text style={styles.statValue}>{theme.currency}{((availableFunds / 30) - getDailyPaymentImpact()).toFixed(0)}</Text>
+            <Text style={styles.statSubtext}>After Payments</Text>
           </LinearGradient>
 
           {/* Average Income Card */}
