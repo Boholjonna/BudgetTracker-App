@@ -203,7 +203,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     legendFontColor: 'transparent',
                     legendFontSize: 0,
                   }))}
-                  width={screenWidth - 40}
+                  width={280}
                   height={280}
                   chartConfig={{
                     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
