@@ -6,8 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Modal, Alert, FlatList } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useData, useTheme } from '../contexts';
@@ -33,8 +32,13 @@ export const AddExpenseScreen: React.FC<AddExpenseScreenProps> = ({ navigation }
   const [amountError, setAmountError] = useState<string | undefined>();
   const [categoryError, setCategoryError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryError, setNewCategoryError] = useState<string | undefined>();
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   
-  const { addExpense, categories } = useData();
+  const { addExpense, categories, addCategory } = useData();
   const { theme } = useTheme();
   const toast = useToast();
 
@@ -56,12 +60,79 @@ export const AddExpenseScreen: React.FC<AddExpenseScreenProps> = ({ navigation }
    * Requirements: 2.2, 4.4
    */
   const handleCategoryChange = (value: string) => {
+    if (value === 'ADD_NEW_CATEGORY') {
+      setShowNewCategoryModal(true);
+      setShowCategoryDropdown(false);
+      return;
+    }
+    
     setCategoryId(value);
+    setShowCategoryDropdown(false);
     
     // Clear error when user selects a category
     if (categoryError) {
       setCategoryError(undefined);
     }
+  };
+
+  /**
+   * Get selected category name for display
+   */
+  const getSelectedCategoryName = () => {
+    if (!categoryId) return 'Select a category...';
+    const selectedCategory = categories.find(cat => cat.id === categoryId);
+    return selectedCategory?.name || 'Select a category...';
+  };
+
+  /**
+   * Handle new category creation
+   */
+  const handleAddNewCategory = async () => {
+    // Validate category name
+    if (!newCategoryName.trim()) {
+      setNewCategoryError('Category name is required');
+      return;
+    }
+
+    // Check if category already exists
+    const existingCategory = categories.find(
+      cat => cat.name.toLowerCase() === newCategoryName.trim().toLowerCase()
+    );
+    
+    if (existingCategory) {
+      setNewCategoryError('Category already exists');
+      return;
+    }
+
+    try {
+      setIsAddingCategory(true);
+      
+      // Add new category
+      const newCategory = await addCategory(newCategoryName.trim());
+      
+      // Select the new category
+      setCategoryId(newCategory.id);
+      
+      // Close modal and reset form
+      setShowNewCategoryModal(false);
+      setNewCategoryName('');
+      setNewCategoryError(undefined);
+      
+      toast.showSuccess(`Category "${newCategoryName.trim()}" added successfully!`);
+    } catch (err) {
+      ErrorHandler.handle(err, 'adding category');
+    } finally {
+      setIsAddingCategory(false);
+    }
+  };
+
+  /**
+   * Handle new category modal close
+   */
+  const handleCloseNewCategoryModal = () => {
+    setShowNewCategoryModal(false);
+    setNewCategoryName('');
+    setNewCategoryError(undefined);
   };
 
   /**
@@ -121,6 +192,15 @@ export const AddExpenseScreen: React.FC<AddExpenseScreenProps> = ({ navigation }
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      {/* Overlay to close dropdown when tapping outside */}
+      {showCategoryDropdown && (
+        <TouchableOpacity
+          style={styles.overlay}
+          onPress={() => setShowCategoryDropdown(false)}
+          activeOpacity={1}
+        />
+      )}
+      
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
           {/* Instructions */}
@@ -130,7 +210,7 @@ export const AddExpenseScreen: React.FC<AddExpenseScreenProps> = ({ navigation }
 
           {/* Amount Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Amount ($)</Text>
+            <Text style={styles.label}>Amount ({theme.currency})</Text>
             <TextInput
               style={[
                 styles.input,
@@ -150,29 +230,79 @@ export const AddExpenseScreen: React.FC<AddExpenseScreenProps> = ({ navigation }
           {/* Category Selection */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Category</Text>
-            <View
+            <TouchableOpacity
               style={[
-                styles.pickerContainer,
+                styles.dropdownButton,
                 categoryError ? styles.inputError : null,
                 { borderColor: categoryError ? '#e74c3c' : theme.primaryColor },
               ]}
+              onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              disabled={isSubmitting}
+              activeOpacity={0.7}
             >
-              <Picker
-                selectedValue={categoryId}
-                onValueChange={handleCategoryChange}
-                enabled={!isSubmitting}
-                style={styles.picker}
-              >
-                <Picker.Item label="Select a category..." value="" />
-                {categories.map((category) => (
-                  <Picker.Item
-                    key={category.id}
-                    label={category.name}
-                    value={category.id}
-                  />
-                ))}
-              </Picker>
-            </View>
+              <Text style={[
+                styles.dropdownButtonText,
+                !categoryId && styles.dropdownPlaceholder
+              ]}>
+                {getSelectedCategoryName()}
+              </Text>
+              <Text style={[styles.dropdownArrow, { color: theme.primaryColor }]}>
+                {showCategoryDropdown ? '▲' : '▼'}
+              </Text>
+            </TouchableOpacity>
+            
+            {/* Custom Dropdown */}
+            {showCategoryDropdown && (
+              <View style={styles.dropdownContainer}>
+                <ScrollView style={styles.dropdownScrollView} nestedScrollEnabled>
+                  {/* Default option */}
+                  <TouchableOpacity
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setCategoryId('');
+                      setShowCategoryDropdown(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.dropdownItemText}>Select a category...</Text>
+                  </TouchableOpacity>
+                  
+                  {/* Category options */}
+                  {categories.map((category) => (
+                    <TouchableOpacity
+                      key={category.id}
+                      style={[
+                        styles.dropdownItem,
+                        categoryId === category.id && styles.dropdownItemSelected
+                      ]}
+                      onPress={() => handleCategoryChange(category.id)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[
+                        styles.dropdownItemText,
+                        categoryId === category.id && styles.dropdownItemTextSelected
+                      ]}>
+                        {category.name}
+                      </Text>
+                      {categoryId === category.id && (
+                        <Text style={[styles.checkmark, { color: theme.primaryColor }]}>✓</Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                  
+                  {/* Add new category option */}
+                  <TouchableOpacity
+                    style={[styles.dropdownItem, styles.addCategoryItem]}
+                    onPress={() => handleCategoryChange('ADD_NEW_CATEGORY')}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.dropdownItemText, { color: theme.primaryColor, fontWeight: '600' }]}>
+                      ➕ Add New Category
+                    </Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            )}
             {categoryError && <Text style={styles.errorText}>{categoryError}</Text>}
           </View>
 
@@ -193,6 +323,80 @@ export const AddExpenseScreen: React.FC<AddExpenseScreenProps> = ({ navigation }
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Add New Category Modal */}
+      <Modal
+        visible={showNewCategoryModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={handleCloseNewCategoryModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add New Category</Text>
+            <TouchableOpacity
+              onPress={handleCloseNewCategoryModal}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.modalContent}>
+            <Text style={styles.modalInstructions}>
+              Enter a name for the new expense category. This will be available for future expenses.
+            </Text>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Category Name</Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  newCategoryError ? styles.inputError : null,
+                  { borderColor: newCategoryError ? '#e74c3c' : theme.primaryColor },
+                ]}
+                value={newCategoryName}
+                onChangeText={(text) => {
+                  setNewCategoryName(text);
+                  if (newCategoryError) {
+                    setNewCategoryError(undefined);
+                  }
+                }}
+                placeholder="e.g., Groceries, Transportation, Entertainment"
+                editable={!isAddingCategory}
+                autoFocus
+                maxLength={50}
+              />
+              {newCategoryError && <Text style={styles.errorText}>{newCategoryError}</Text>}
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={handleCloseNewCategoryModal}
+                disabled={isAddingCategory}
+              >
+                <Text style={styles.modalCancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  styles.modalAddButton,
+                  { backgroundColor: theme.primaryColor },
+                  isAddingCategory && styles.modalButtonDisabled,
+                ]}
+                onPress={handleAddNewCategory}
+                disabled={isAddingCategory}
+              >
+                <Text style={styles.modalAddButtonText}>
+                  {isAddingCategory ? 'Adding...' : 'Add Category'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
@@ -201,6 +405,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
   },
   scrollContent: {
     flexGrow: 1,
@@ -234,6 +446,82 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: '#e74c3c',
   },
+  dropdownButton: {
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
+  },
+  dropdownPlaceholder: {
+    color: '#999',
+  },
+  dropdownArrow: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  dropdownContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderTopWidth: 0,
+    borderColor: '#e0e0e0',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    maxHeight: 200,
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  dropdownScrollView: {
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#f8f9fa',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
+  },
+  dropdownItemTextSelected: {
+    fontWeight: '600',
+  },
+  checkmark: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  addCategoryItem: {
+    borderBottomWidth: 0,
+    backgroundColor: '#f8f9fa',
+  },
   pickerContainer: {
     backgroundColor: '#fff',
     borderWidth: 2,
@@ -265,5 +553,78 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    fontSize: 18,
+    color: '#666',
+  },
+  modalContent: {
+    padding: 20,
+  },
+  modalInstructions: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+  },
+  modalButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  modalCancelButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalAddButton: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  modalAddButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalButtonDisabled: {
+    opacity: 0.6,
   },
 });
