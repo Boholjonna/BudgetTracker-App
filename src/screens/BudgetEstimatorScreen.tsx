@@ -108,7 +108,7 @@ export const BudgetEstimatorScreen: React.FC<BudgetEstimatorScreenProps> = ({ na
 
         {/* Available Amount Input */}
         <View style={styles.inputContainer}>
-          <Text style={styles.label}>Available Amount ($)</Text>
+          <Text style={styles.label}>Available Amount ({theme.currency})</Text>
           <TextInput
             style={[styles.input, { borderColor: theme.primaryColor }]}
             value={customAmount}
@@ -168,13 +168,13 @@ export const BudgetEstimatorScreen: React.FC<BudgetEstimatorScreenProps> = ({ na
           <View style={[styles.resultCard, { borderColor: theme.primaryColor }]}>
             <Text style={styles.resultTitle}>Daily Budget</Text>
             <Text style={[styles.resultAmount, { color: theme.primaryColor }]}>
-              ${estimate.dailyBudget.toFixed(2)}
+              {theme.currency}{estimate.dailyBudget.toFixed(2)}
             </Text>
             
             <View style={styles.resultDetails}>
               <View style={styles.resultRow}>
                 <Text style={styles.resultLabel}>Total Amount:</Text>
-                <Text style={styles.resultValue}>${estimate.availableAmount.toFixed(2)}</Text>
+                <Text style={styles.resultValue}>{theme.currency}{estimate.availableAmount.toFixed(2)}</Text>
               </View>
               <View style={styles.resultRow}>
                 <Text style={styles.resultLabel}>Number of Days:</Text>

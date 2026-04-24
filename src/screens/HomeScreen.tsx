@@ -14,7 +14,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { useData, useTheme } from '../contexts';
 import { analyticsEngine } from '../managers/analytics.manager';
 import { CategorySpending } from '../models';
-import { LineChart, BarChart } from 'react-native-chart-kit';
+import { LineChart, PieChart } from 'react-native-chart-kit';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
@@ -181,34 +181,71 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           />
         </View>
 
-        {/* Top Categories */}
+        {/* Top Categories with Pie Chart */}
         <View style={styles.chartCard}>
           <Text style={styles.chartTitle}>🏆 Top Spending Categories</Text>
           {categorySpending.length > 0 ? (
-            <View style={styles.categoriesList}>
-              {categorySpending.map((item, index) => (
-                <View key={item.category.id} style={styles.categoryItem}>
-                  <View style={styles.categoryRank}>
-                    <Text style={styles.rankText}>#{index + 1}</Text>
-                  </View>
-                  <View style={styles.categoryInfo}>
-                    <Text style={styles.categoryName}>{item.category.name}</Text>
-                    <View style={styles.progressBar}>
-                      <LinearGradient
-                        colors={[gradientStart, gradientEnd]}
-                        style={[styles.progressFill, { width: `${item.percentage}%` }]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                      />
+            <>
+              {/* Pie Chart */}
+              <PieChart
+                data={categorySpending.map((item, index) => ({
+                  name: item.category.name,
+                  amount: item.totalAmount,
+                  color: [
+                    gradientStart,
+                    '#FF6B6B',
+                    '#4ECDC4',
+                    '#FFD93D',
+                    '#A8E6CF',
+                  ][index % 5],
+                  legendFontColor: '#333',
+                  legendFontSize: 12,
+                }))}
+                width={screenWidth - 60}
+                height={220}
+                chartConfig={{
+                  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                }}
+                accessor="amount"
+                backgroundColor="transparent"
+                paddingLeft="15"
+                absolute
+              />
+              
+              {/* Category List */}
+              <View style={styles.categoriesList}>
+                {categorySpending.map((item, index) => (
+                  <View key={item.category.id} style={styles.categoryItem}>
+                    <View style={[styles.categoryRank, { 
+                      backgroundColor: [
+                        gradientStart,
+                        '#FF6B6B',
+                        '#4ECDC4',
+                        '#FFD93D',
+                        '#A8E6CF',
+                      ][index % 5] 
+                    }]}>
+                      <Text style={styles.rankTextWhite}>#{index + 1}</Text>
+                    </View>
+                    <View style={styles.categoryInfo}>
+                      <Text style={styles.categoryName}>{item.category.name}</Text>
+                      <View style={styles.progressBar}>
+                        <LinearGradient
+                          colors={[gradientStart, gradientEnd]}
+                          style={[styles.progressFill, { width: `${item.percentage}%` }]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.categoryAmount}>
+                      <Text style={styles.amountText}>{theme.currency}{item.totalAmount.toFixed(0)}</Text>
+                      <Text style={styles.percentText}>{item.percentage.toFixed(1)}%</Text>
                     </View>
                   </View>
-                  <View style={styles.categoryAmount}>
-                    <Text style={styles.amountText}>{theme.currency}{item.totalAmount.toFixed(0)}</Text>
-                    <Text style={styles.percentText}>{item.percentage.toFixed(1)}%</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
+                ))}
+              </View>
+            </>
           ) : (
             <Text style={styles.noDataText}>No expenses yet. Start tracking!</Text>
           )}
@@ -334,6 +371,7 @@ const styles = StyleSheet.create({
   },
   categoriesList: {
     gap: 16,
+    marginTop: 16,
   },
   categoryItem: {
     flexDirection: 'row',
@@ -352,6 +390,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#666',
+  },
+  rankTextWhite: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   categoryInfo: {
     flex: 1,

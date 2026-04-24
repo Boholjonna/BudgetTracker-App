@@ -83,7 +83,7 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ navigation }) 
         </View>
         
         <View style={styles.spendingDetails}>
-          <Text style={styles.amount}>${item.totalAmount.toFixed(2)}</Text>
+          <Text style={styles.amount}>{theme.currency}{item.totalAmount.toFixed(2)}</Text>
           <Text style={styles.percentage}>{item.percentage.toFixed(1)}%</Text>
         </View>
         
@@ -115,7 +115,7 @@ export const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ navigation }) 
       <View style={[styles.summaryCard, { borderColor: theme.primaryColor }]}>
         <Text style={styles.summaryLabel}>Total Spending</Text>
         <Text style={[styles.summaryAmount, { color: theme.primaryColor }]}>
-          ${totalSpending.toFixed(2)}
+          {theme.currency}{totalSpending.toFixed(2)}
         </Text>
       </View>
 
