@@ -9,21 +9,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput,
 import { LinearGradient } from 'expo-linear-gradient';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { useTheme } from '../contexts';
+import { useTheme, useData } from '../contexts';
+import { RecurringPayment } from '../models';
 
 type PaymentsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Payments'>;
 
 interface PaymentsScreenProps {
   navigation: PaymentsScreenNavigationProp;
-}
-
-interface RecurringPayment {
-  id: string;
-  name: string;
-  amount: number;
-  frequency: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly';
-  nextDueDate: Date;
-  category: string;
 }
 
 /**
@@ -34,7 +26,7 @@ interface RecurringPayment {
  */
 export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
-  const [payments, setPayments] = useState<RecurringPayment[]>([]);
+  const { recurringPayments, addRecurringPayment, deleteRecurringPayment } = useData();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFrequencyModal, setShowFrequencyModal] = useState(false);
   const [newPaymentName, setNewPaymentName] = useState('');
@@ -65,12 +57,12 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({ navigation }) =>
   };
 
   const getTotalDailyImpact = () => {
-    return payments.reduce((total, payment) => {
+    return recurringPayments.reduce((total, payment) => {
       return total + getDailyImpact(payment.amount, payment.frequency);
     }, 0);
   };
 
-  const handleAddPayment = () => {
+  const handleAddPayment = async () => {
     let hasError = false;
 
     // Validate name
@@ -94,33 +86,27 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({ navigation }) =>
 
     if (hasError) return;
 
-    // Calculate next due date based on frequency
-    const nextDueDate = new Date();
-    const option = frequencyOptions.find(opt => opt.value === newPaymentFrequency);
-    if (option) {
-      nextDueDate.setDate(nextDueDate.getDate() + option.days);
+    try {
+      // Add payment via DataContext
+      await addRecurringPayment(
+        newPaymentName.trim(),
+        parseFloat(newPaymentAmount),
+        newPaymentFrequency,
+        newPaymentCategory.trim()
+      );
+      
+      // Reset form
+      setNewPaymentName('');
+      setNewPaymentAmount('');
+      setNewPaymentFrequency('monthly');
+      setNewPaymentCategory('');
+      setNameError(undefined);
+      setAmountError(undefined);
+      setCategoryError(undefined);
+      setShowAddModal(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add recurring payment. Please try again.');
     }
-
-    const newPayment: RecurringPayment = {
-      id: Date.now().toString(),
-      name: newPaymentName.trim(),
-      amount: parseFloat(newPaymentAmount),
-      frequency: newPaymentFrequency,
-      nextDueDate,
-      category: newPaymentCategory.trim(),
-    };
-
-    setPayments([...payments, newPayment]);
-    
-    // Reset form
-    setNewPaymentName('');
-    setNewPaymentAmount('');
-    setNewPaymentFrequency('monthly');
-    setNewPaymentCategory('');
-    setNameError(undefined);
-    setAmountError(undefined);
-    setCategoryError(undefined);
-    setShowAddModal(false);
   };
 
   const handleDeletePayment = (id: string) => {
@@ -132,8 +118,12 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({ navigation }) =>
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            setPayments(payments.filter(p => p.id !== id));
+          onPress: async () => {
+            try {
+              await deleteRecurringPayment(id);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete payment. Please try again.');
+            }
           },
         },
       ]
@@ -173,14 +163,14 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({ navigation }) =>
         </LinearGradient>
 
         {/* Daily Impact Card */}
-        {payments.length > 0 && (
+        {recurringPayments.length > 0 && (
           <View style={styles.impactCard}>
             <Text style={styles.impactLabel}>Daily Budget Impact</Text>
             <Text style={styles.impactValue}>
               {theme.currency}{getTotalDailyImpact().toFixed(2)}/day
             </Text>
             <Text style={styles.impactSubtext}>
-              From {payments.length} recurring payment{payments.length !== 1 ? 's' : ''}
+              From {recurringPayments.length} recurring payment{recurringPayments.length !== 1 ? 's' : ''}
             </Text>
           </View>
         )}
@@ -196,7 +186,7 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({ navigation }) =>
         </TouchableOpacity>
 
         {/* Payments List */}
-        {payments.length === 0 ? (
+        {recurringPayments.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateIcon}>▭</Text>
             <Text style={styles.emptyStateTitle}>No Recurring Payments</Text>
@@ -206,7 +196,7 @@ export const PaymentsScreen: React.FC<PaymentsScreenProps> = ({ navigation }) =>
           </View>
         ) : (
           <View style={styles.paymentsList}>
-            {payments.map((payment) => (
+            {recurringPayments.map((payment) => (
               <View key={payment.id} style={styles.paymentCard}>
                 <View style={styles.paymentHeader}>
                   <View style={styles.paymentInfo}>

@@ -11,3 +11,4 @@ export { budgetCalculator, type BudgetCalculator } from './budget.manager';
 export { analyticsEngine, type AnalyticsEngine } from './analytics.manager';
 export { dataManager, type DataManager } from './data.manager';
 export { themeManager, type ThemeManager } from './theme.manager';
+export { recurringPaymentsManager } from './recurring-payments.manager';

@@ -7,8 +7,8 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { EarningEntry, ExpenseEntry, Category } from '../models';
-import { earningsManager, expenseTracker, categoryManager } from '../managers';
+import { EarningEntry, ExpenseEntry, Category, RecurringPayment } from '../models';
+import { earningsManager, expenseTracker, categoryManager, recurringPaymentsManager } from '../managers';
 
 /**
  * Data Context State Interface
@@ -18,6 +18,7 @@ interface DataContextState {
   earnings: EarningEntry[];
   expenses: ExpenseEntry[];
   categories: Category[];
+  recurringPayments: RecurringPayment[];
   
   // Calculated values
   availableFunds: number;
@@ -29,6 +30,8 @@ interface DataContextState {
   addEarning: (amount: number) => Promise<EarningEntry>;
   addExpense: (amount: number, categoryId: string) => Promise<ExpenseEntry>;
   addCategory: (name: string) => Promise<Category>;
+  addRecurringPayment: (name: string, amount: number, frequency: RecurringPayment['frequency'], category: string) => Promise<RecurringPayment>;
+  deleteRecurringPayment: (id: string) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -55,6 +58,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [earnings, setEarnings] = useState<EarningEntry[]>([]);
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [recurringPayments, setRecurringPayments] = useState<RecurringPayment[]>([]);
   const [availableFunds, setAvailableFunds] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -80,7 +84,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setIsLoading(true);
       
       // Load data from managers
-      const [earningsData, expensesData, categoriesData] = await Promise.all([
+      const [earningsData, expensesData, categoriesData, paymentsData] = await Promise.all([
         earningsManager.getTotalEarnings().then(async () => {
           // Get actual earnings array from storage
           const { storageService } = await import('../services/storage.service');
@@ -92,12 +96,14 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           return storageService.getAllExpenses();
         }),
         categoryManager.getAllCategories(),
+        recurringPaymentsManager.getAllPayments(),
       ]);
 
       // Update state
       setEarnings(earningsData);
       setExpenses(expensesData);
       setCategories(categoriesData);
+      setRecurringPayments(paymentsData);
       
       // Calculate and set available funds
       const funds = calculateAvailableFunds(earningsData, expensesData);
@@ -108,6 +114,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setEarnings([]);
       setExpenses([]);
       setCategories([]);
+      setRecurringPayments([]);
       setAvailableFunds(0);
     } finally {
       setIsLoading(false);
@@ -172,6 +179,33 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   }, [categories]);
 
   /**
+   * Add a new recurring payment
+   */
+  const addRecurringPayment = useCallback(async (
+    name: string,
+    amount: number,
+    frequency: RecurringPayment['frequency'],
+    category: string
+  ): Promise<RecurringPayment> => {
+    const payment = await recurringPaymentsManager.addPayment(name, amount, frequency, category);
+    
+    // Update local state
+    setRecurringPayments([...recurringPayments, payment]);
+    
+    return payment;
+  }, [recurringPayments]);
+
+  /**
+   * Delete a recurring payment
+   */
+  const deleteRecurringPayment = useCallback(async (id: string): Promise<void> => {
+    await recurringPaymentsManager.deletePayment(id);
+    
+    // Update local state
+    setRecurringPayments(recurringPayments.filter(p => p.id !== id));
+  }, [recurringPayments]);
+
+  /**
    * Refresh all data from storage
    * Requirements: 8.6
    */
@@ -183,11 +217,14 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     earnings,
     expenses,
     categories,
+    recurringPayments,
     availableFunds,
     isLoading,
     addEarning,
     addExpense,
     addCategory,
+    addRecurringPayment,
+    deleteRecurringPayment,
     refreshData,
   };
 

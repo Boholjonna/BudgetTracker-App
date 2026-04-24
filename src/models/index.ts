@@ -136,3 +136,24 @@ export interface EntryCount {
   /** Number of expense entries */
   expenses: number;
 }
+
+/**
+ * Represents a recurring payment (bills, subscriptions, etc.)
+ * Requirements: Recurring payments feature
+ */
+export interface RecurringPayment {
+  /** Unique identifier (UUID v4) */
+  id: string;
+  /** Payment name (e.g., "Rent", "Netflix") */
+  name: string;
+  /** Payment amount (positive decimal) */
+  amount: number;
+  /** Payment frequency */
+  frequency: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly' | 'yearly';
+  /** Next due date (Unix timestamp in milliseconds) */
+  nextDueDate: number;
+  /** Payment category (e.g., "Housing", "Utilities") */
+  category: string;
+  /** Unix timestamp when payment was created */
+  createdAt: number;
+}

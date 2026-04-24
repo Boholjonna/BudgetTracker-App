@@ -240,11 +240,12 @@ describe('Storage Service', () => {
 
       await storageService.clear();
 
-      expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(4);
+      expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(5);
       expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.EARNINGS);
       expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.EXPENSES);
       expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.CATEGORIES);
       expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.THEME);
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith(STORAGE_KEYS.RECURRING_PAYMENTS);
     });
 
     it('should throw error when clear fails', async () => {

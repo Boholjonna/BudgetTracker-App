@@ -8,7 +8,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EarningEntry, ExpenseEntry, Category, Theme } from '../models';
+import { EarningEntry, ExpenseEntry, Category, Theme, RecurringPayment } from '../models';
 
 /**
  * Storage keys for AsyncStorage
@@ -18,6 +18,7 @@ const STORAGE_KEYS = {
   EXPENSES: '@expenses',
   CATEGORIES: '@categories',
   THEME: '@theme',
+  RECURRING_PAYMENTS: '@recurring_payments',
 } as const;
 
 /**
@@ -42,6 +43,12 @@ export interface StorageService {
   // Theme operations
   saveTheme(theme: Theme): Promise<void>;
   getTheme(): Promise<Theme | null>;
+
+  // Recurring payments operations
+  saveRecurringPayment(payment: RecurringPayment): Promise<void>;
+  getAllRecurringPayments(): Promise<RecurringPayment[]>;
+  deleteRecurringPayment(id: string): Promise<void>;
+  updateRecurringPayment(payment: RecurringPayment): Promise<void>;
 
   // Utility operations
   clear(): Promise<void>;
@@ -198,6 +205,65 @@ class AsyncStorageService implements StorageService {
   }
 
   /**
+   * Save a recurring payment to storage
+   */
+  async saveRecurringPayment(payment: RecurringPayment): Promise<void> {
+    try {
+      const payments = await this.getAllRecurringPayments();
+      payments.push(payment);
+      await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_PAYMENTS, JSON.stringify(payments));
+    } catch (error) {
+      throw new Error(`Failed to save recurring payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Retrieve all recurring payments from storage
+   */
+  async getAllRecurringPayments(): Promise<RecurringPayment[]> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.RECURRING_PAYMENTS);
+      if (!data) {
+        return [];
+      }
+      return JSON.parse(data) as RecurringPayment[];
+    } catch (error) {
+      throw new Error(`Failed to retrieve recurring payments: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Delete a recurring payment by ID
+   */
+  async deleteRecurringPayment(id: string): Promise<void> {
+    try {
+      const payments = await this.getAllRecurringPayments();
+      const filtered = payments.filter(payment => payment.id !== id);
+      await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_PAYMENTS, JSON.stringify(filtered));
+    } catch (error) {
+      throw new Error(`Failed to delete recurring payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Update a recurring payment
+   */
+  async updateRecurringPayment(payment: RecurringPayment): Promise<void> {
+    try {
+      const payments = await this.getAllRecurringPayments();
+      const index = payments.findIndex(p => p.id === payment.id);
+      if (index !== -1) {
+        payments[index] = payment;
+        await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_PAYMENTS, JSON.stringify(payments));
+      } else {
+        throw new Error('Recurring payment not found');
+      }
+    } catch (error) {
+      throw new Error(`Failed to update recurring payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Clear all data from storage
    * Utility method for testing and data reset
    */
@@ -208,6 +274,7 @@ class AsyncStorageService implements StorageService {
         AsyncStorage.removeItem(STORAGE_KEYS.EXPENSES),
         AsyncStorage.removeItem(STORAGE_KEYS.CATEGORIES),
         AsyncStorage.removeItem(STORAGE_KEYS.THEME),
+        AsyncStorage.removeItem(STORAGE_KEYS.RECURRING_PAYMENTS),
       ]);
     } catch (error) {
       throw new Error(`Failed to clear storage: ${error instanceof Error ? error.message : 'Unknown error'}`);
