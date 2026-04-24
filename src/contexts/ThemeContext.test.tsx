@@ -17,10 +17,12 @@ describe('ThemeContext', () => {
   // Sample test data
   const defaultTheme: Theme = {
     primaryColor: '#4CAF50',
+    currency: '$'
   };
 
   const customTheme: Theme = {
     primaryColor: '#FF5722',
+    currency: '$'
   };
 
   beforeEach(() => {
@@ -120,7 +122,7 @@ describe('ThemeContext', () => {
 
   describe('Theme application to components', () => {
     it('should provide theme that can be applied to component styles', async () => {
-      const purpleTheme: Theme = { primaryColor: '#9C27B0' };
+      const purpleTheme: Theme = { primaryColor: '#9C27B0', currency: '$' };
       mockThemeManager.getTheme.mockResolvedValue(purpleTheme);
       
       const theme = await themeManager.getTheme();
@@ -137,7 +139,7 @@ describe('ThemeContext', () => {
       const colors = ['#F44336', '#2196F3', '#4CAF50', '#FFC107', '#9C27B0'];
       
       for (const color of colors) {
-        const theme: Theme = { primaryColor: color };
+        const theme: Theme = { primaryColor: color, currency: '$' };
         mockThemeManager.getTheme.mockResolvedValue(theme);
         
         const loadedTheme = await themeManager.getTheme();
@@ -167,7 +169,7 @@ describe('ThemeContext', () => {
       expect(themeManager.setTheme).toHaveBeenCalledWith(newColor);
       
       // Simulate reload
-      mockThemeManager.getTheme.mockResolvedValue({ primaryColor: newColor });
+      mockThemeManager.getTheme.mockResolvedValue({ primaryColor: newColor, currency: '$' });
       const reloadedTheme = await themeManager.getTheme();
       
       expect(reloadedTheme.primaryColor).toBe(newColor);

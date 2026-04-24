@@ -196,6 +196,7 @@ describe('Storage Service', () => {
   describe('Theme Operations', () => {
     const mockTheme: Theme = {
       primaryColor: '#00FF00',
+      currency: '$'
     };
 
     it('should save theme preferences', async () => {

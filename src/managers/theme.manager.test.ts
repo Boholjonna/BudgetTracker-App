@@ -54,6 +54,7 @@ describe('Theme Manager', () => {
       expect(storageService.saveTheme).toHaveBeenCalledTimes(1);
       expect(storageService.saveTheme).toHaveBeenCalledWith({
         primaryColor: customColor,
+        currency: '$'
       });
     });
 
@@ -71,7 +72,7 @@ describe('Theme Manager', () => {
   describe('getTheme', () => {
     it('should return the stored theme when available', async () => {
       // Requirement 7.4, 7.5: Load theme from storage
-      const storedTheme: Theme = { primaryColor: '#2196F3' };
+      const storedTheme: Theme = { primaryColor: '#2196F3', currency: '$' };
       (storageService.getTheme as jest.Mock).mockResolvedValue(storedTheme);
       
       const theme = await themeManager.getTheme();
@@ -103,7 +104,7 @@ describe('Theme Manager', () => {
     it('should persist and retrieve a custom theme', async () => {
       // Requirement 7.4: Theme persistence
       const customColor = '#9C27B0';
-      const customTheme: Theme = { primaryColor: customColor };
+      const customTheme: Theme = { primaryColor: customColor, currency: '$' };
       
       // Set the theme
       await themeManager.setTheme(customColor);
@@ -119,7 +120,7 @@ describe('Theme Manager', () => {
 
     it('should simulate app launch with stored theme', async () => {
       // Requirement 7.5: Load theme on app launch
-      const storedTheme: Theme = { primaryColor: '#FF9800' };
+      const storedTheme: Theme = { primaryColor: '#FF9800', currency: '$' };
       (storageService.getTheme as jest.Mock).mockResolvedValue(storedTheme);
       
       // Simulate app launch - get theme

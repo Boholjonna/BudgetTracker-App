@@ -84,10 +84,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   }, [expenses, isLoading]);
 
   const quickActions = [
-    { title: 'Add Earning', screen: 'AddEarning' as const, icon: '💰', colors: ['#4CAF50', '#45a049'] },
-    { title: 'Add Expense', screen: 'AddExpense' as const, icon: '💸', colors: ['#f44336', '#da190b'] },
-    { title: 'Budget', screen: 'BudgetEstimator' as const, icon: '📊', colors: ['#2196F3', '#0b7dda'] },
-    { title: 'Settings', screen: 'Settings' as const, icon: '⚙️', colors: ['#9C27B0', '#7b1fa2'] },
+    { title: 'Add Earning', screen: 'AddEarning' as const, icon: '💰', colors: ['#4CAF50', '#45a049'] as const },
+    { title: 'Add Expense', screen: 'AddExpense' as const, icon: '💸', colors: ['#f44336', '#da190b'] as const },
+    { title: 'Budget', screen: 'BudgetEstimator' as const, icon: '📊', colors: ['#2196F3', '#0b7dda'] as const },
+    { title: 'Settings', screen: 'Settings' as const, icon: '⚙️', colors: ['#9C27B0', '#7b1fa2'] as const },
   ];
 
   const getGradientColors = (baseColor: string): [string, string] => {
@@ -111,7 +111,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     <ScrollView style={styles.container}>
       {/* Header with Gradient */}
       <LinearGradient
-        colors={[gradientStart, gradientEnd]}
+        colors={[gradientStart, gradientEnd] as const}
         style={styles.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -125,7 +125,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <View style={styles.statsRow}>
           {/* Available Funds Card */}
           <LinearGradient
-            colors={[gradientStart, gradientEnd]}
+            colors={[gradientStart, gradientEnd] as const}
             style={styles.statCard}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -141,7 +141,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
           {/* Average Spending Card */}
           <LinearGradient
-            colors={['#FF6B6B', '#EE5A6F']}
+            colors={['#FF6B6B', '#EE5A6F'] as const}
             style={styles.statCard}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -162,7 +162,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             }}
             width={screenWidth - 60}
             height={200}
-            withLegend={false}
             chartConfig={{
               backgroundColor: '#ffffff',
               backgroundGradientFrom: '#ffffff',
@@ -210,7 +209,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                   }}
                   accessor="population"
                   backgroundColor="transparent"
-                  paddingLeft={(screenWidth - 40 - 220) / 2 + 13}
+                  paddingLeft={`${(screenWidth - 40 - 220) / 2 + 13}`}
                   absolute
                   hasLegend={false}
                 />
@@ -235,7 +234,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       <Text style={styles.categoryName}>{item.category.name}</Text>
                       <View style={styles.progressBar}>
                         <LinearGradient
-                          colors={[gradientStart, gradientEnd]}
+                          colors={[gradientStart, gradientEnd] as const}
                           style={[styles.progressFill, { width: `${item.percentage}%` }]}
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 0 }}
