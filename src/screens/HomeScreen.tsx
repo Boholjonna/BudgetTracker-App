@@ -154,7 +154,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
         {/* Weekly Spending Chart */}
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>📈 Weekly Spending Trend</Text>
+          <Text style={styles.chartTitle}>Weekly Spending Trend</Text>
           <LineChart
             data={{
               labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
@@ -184,7 +184,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
         {/* Top Categories with Pie Chart */}
         <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>🏆 Top Spending Categories</Text>
+          <Text style={styles.chartTitle}>Top Spending Categories</Text>
           {categorySpending.length > 0 ? (
             <>
               {/* Pie Chart */}
@@ -203,14 +203,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     legendFontColor: 'transparent',
                     legendFontSize: 0,
                   }))}
-                  width={screenWidth}
+                  width={screenWidth - 40}
                   height={280}
                   chartConfig={{
                     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                   }}
                   accessor="population"
                   backgroundColor="transparent"
-                  paddingLeft="70"
+                  paddingLeft="15"
                   absolute
                   hasLegend={false}
                 />
