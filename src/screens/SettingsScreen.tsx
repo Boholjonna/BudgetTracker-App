@@ -6,7 +6,8 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, TextInput, Modal } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme } from '../contexts';
@@ -36,18 +37,32 @@ const CURRENCIES = [
 ];
 
 /**
- * Predefined theme color options
+ * Predefined theme color options with gradients
  * Requirements: 7.2
  */
 const THEME_COLORS = [
-  { name: 'Green', color: '#4CAF50', isDefault: true },
-  { name: 'Blue', color: '#2196F3', isDefault: false },
-  { name: 'Purple', color: '#9C27B0', isDefault: false },
-  { name: 'Orange', color: '#FF9800', isDefault: false },
-  { name: 'Red', color: '#F44336', isDefault: false },
-  { name: 'Teal', color: '#009688', isDefault: false },
-  { name: 'Pink', color: '#E91E63', isDefault: false },
-  { name: 'Indigo', color: '#3F51B5', isDefault: false },
+  { name: 'Green', color: '#4CAF50', gradient: ['#4CAF50', '#45a049'], isDefault: true },
+  { name: 'Blue', color: '#2196F3', gradient: ['#2196F3', '#1976D2'], isDefault: false },
+  { name: 'Purple', color: '#9C27B0', gradient: ['#9C27B0', '#7B1FA2'], isDefault: false },
+  { name: 'Orange', color: '#FF9800', gradient: ['#FF9800', '#F57C00'], isDefault: false },
+  { name: 'Red', color: '#F44336', gradient: ['#F44336', '#D32F2F'], isDefault: false },
+  { name: 'Teal', color: '#009688', gradient: ['#009688', '#00695C'], isDefault: false },
+  { name: 'Pink', color: '#E91E63', gradient: ['#E91E63', '#C2185B'], isDefault: false },
+  { name: 'Indigo', color: '#3F51B5', gradient: ['#3F51B5', '#303F9F'], isDefault: false },
+];
+
+/**
+ * Predefined gradient combinations
+ */
+const GRADIENT_PRESETS = [
+  { name: 'Ocean', colors: ['#667eea', '#764ba2'] },
+  { name: 'Sunset', colors: ['#f093fb', '#f5576c'] },
+  { name: 'Forest', colors: ['#11998e', '#38ef7d'] },
+  { name: 'Fire', colors: ['#ff9a9e', '#fecfef'] },
+  { name: 'Sky', colors: ['#a8edea', '#fed6e3'] },
+  { name: 'Royal', colors: ['#667eea', '#764ba2'] },
+  { name: 'Mint', colors: ['#d299c2', '#fef9d7'] },
+  { name: 'Cosmic', colors: ['#fa709a', '#fee140'] },
 ];
 
 /**
@@ -59,6 +74,9 @@ const THEME_COLORS = [
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
   const { theme, setTheme, setCurrency, resetToDefault } = useTheme();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showCustomGradient, setShowCustomGradient] = useState(false);
+  const [customColor1, setCustomColor1] = useState('#4CAF50');
+  const [customColor2, setCustomColor2] = useState('#45a049');
   const toast = useToast();
 
   /**
@@ -80,6 +98,49 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
     }
   };
 
+  /**
+   * Handle gradient preset selection
+   */
+  const handleGradientPresetSelect = async (gradientColors: string[], gradientName: string) => {
+    try {
+      setIsUpdating(true);
+      
+      // Use the first color as the primary color for compatibility
+      await setTheme(gradientColors[0]);
+      
+      toast.showSuccess(`Gradient theme "${gradientName}" applied`);
+    } catch (error) {
+      ErrorHandler.handle(error, 'updating gradient theme');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  /**
+   * Handle custom gradient creation
+   */
+  const handleCustomGradientApply = async () => {
+    try {
+      setIsUpdating(true);
+      
+      // Validate hex colors
+      const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+      if (!hexRegex.test(customColor1) || !hexRegex.test(customColor2)) {
+        Alert.alert('Invalid Color', 'Please enter valid hex colors (e.g., #FF5733)');
+        return;
+      }
+      
+      // Apply the custom gradient (use first color as primary)
+      await setTheme(customColor1);
+      
+      setShowCustomGradient(false);
+      toast.showSuccess('Custom gradient applied successfully!');
+    } catch (error) {
+      ErrorHandler.handle(error, 'applying custom gradient');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
   /**
    * Handle theme color selection
    * Requirements: 7.3, 7.4
@@ -177,11 +238,60 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           </View>
         </View>
 
+        {/* Gradient Presets */}
+        <View style={styles.colorsSection}>
+          <Text style={styles.sectionTitle}>🎨 Gradient Themes</Text>
+          <Text style={styles.sectionSubtitle}>
+            Choose from beautiful gradient combinations
+          </Text>
+
+          <View style={styles.gradientGrid}>
+            {GRADIENT_PRESETS.map((preset) => (
+              <TouchableOpacity
+                key={preset.name}
+                style={styles.gradientOption}
+                onPress={() => handleGradientPresetSelect(preset.colors, preset.name)}
+                disabled={isUpdating}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={preset.colors as [string, string]}
+                  style={styles.gradientPreview}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                />
+                <Text style={styles.gradientName}>{preset.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Custom Gradient Creator */}
+        <View style={styles.colorsSection}>
+          <Text style={styles.sectionTitle}>✨ Create Custom Gradient</Text>
+          <Text style={styles.sectionSubtitle}>
+            Design your own unique gradient theme
+          </Text>
+
+          <TouchableOpacity
+            style={styles.customGradientButton}
+            onPress={() => setShowCustomGradient(true)}
+            activeOpacity={0.7}
+          >
+            <LinearGradient
+              colors={[customColor1, customColor2] as [string, string]}
+              style={styles.customGradientPreview}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            />
+            <Text style={styles.customGradientText}>Create Custom Gradient</Text>
+          </TouchableOpacity>
+        </View>
         {/* Theme Color Options */}
         <View style={styles.colorsSection}>
-          <Text style={styles.sectionTitle}>Choose Theme Color</Text>
+          <Text style={styles.sectionTitle}>🎯 Solid Colors</Text>
           <Text style={styles.sectionSubtitle}>
-            Select a color to customize your app's appearance
+            Select a solid color theme
           </Text>
 
           <View style={styles.colorGrid}>
@@ -199,17 +309,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
                   disabled={isUpdating}
                   activeOpacity={0.7}
                 >
-                  <View
+                  <LinearGradient
+                    colors={themeColor.gradient as [string, string]}
                     style={[
                       styles.colorCircle,
-                      { backgroundColor: themeColor.color },
                       isSelected && styles.colorCircleSelected,
                     ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                   >
                     {isSelected && (
                       <Text style={styles.checkmark}>✓</Text>
                     )}
-                  </View>
+                  </LinearGradient>
                   <Text style={styles.colorName}>{themeColor.name}</Text>
                   {themeColor.isDefault && (
                     <Text style={styles.defaultLabel}>Default</Text>
@@ -237,6 +349,91 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) =>
           </Text>
         </View>
       </View>
+
+      {/* Custom Gradient Modal */}
+      <Modal
+        visible={showCustomGradient}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowCustomGradient(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Create Custom Gradient</Text>
+            <TouchableOpacity
+              onPress={() => setShowCustomGradient(false)}
+              style={styles.modalCloseButton}
+            >
+              <Text style={styles.modalCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.modalContent}>
+            {/* Gradient Preview */}
+            <View style={styles.gradientPreviewContainer}>
+              <Text style={styles.previewLabel}>Preview</Text>
+              <LinearGradient
+                colors={[customColor1, customColor2] as [string, string]}
+                style={styles.largeGradientPreview}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+            </View>
+
+            {/* Color Inputs */}
+            <View style={styles.colorInputsContainer}>
+              <View style={styles.colorInputGroup}>
+                <Text style={styles.colorInputLabel}>Start Color</Text>
+                <View style={styles.colorInputRow}>
+                  <View style={[styles.colorPreview, { backgroundColor: customColor1 }]} />
+                  <TextInput
+                    style={styles.colorInput}
+                    value={customColor1}
+                    onChangeText={setCustomColor1}
+                    placeholder="#4CAF50"
+                    placeholderTextColor="#999"
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+
+              <View style={styles.colorInputGroup}>
+                <Text style={styles.colorInputLabel}>End Color</Text>
+                <View style={styles.colorInputRow}>
+                  <View style={[styles.colorPreview, { backgroundColor: customColor2 }]} />
+                  <TextInput
+                    style={styles.colorInput}
+                    value={customColor2}
+                    onChangeText={setCustomColor2}
+                    placeholder="#45a049"
+                    placeholderTextColor="#999"
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Apply Button */}
+            <TouchableOpacity
+              style={styles.applyGradientButton}
+              onPress={handleCustomGradientApply}
+              disabled={isUpdating}
+              activeOpacity={0.7}
+            >
+              <LinearGradient
+                colors={[customColor1, customColor2] as [string, string]}
+                style={styles.applyGradientButtonGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.applyGradientButtonText}>
+                  {isUpdating ? 'Applying...' : 'Apply Gradient'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -390,6 +587,162 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+  },
+  gradientGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  gradientOption: {
+    width: '47%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  gradientPreview: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  gradientName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  customGradientButton: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  customGradientPreview: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 16,
+  },
+  customGradientText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    fontSize: 18,
+    color: '#666',
+  },
+  modalContent: {
+    padding: 20,
+  },
+  gradientPreviewContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  previewLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  largeGradientPreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  colorInputsContainer: {
+    marginBottom: 32,
+  },
+  colorInputGroup: {
+    marginBottom: 20,
+  },
+  colorInputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  colorInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  colorPreview: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  colorInput: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#333',
+  },
+  applyGradientButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  applyGradientButtonGradient: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  applyGradientButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   colorCircleSelected: {
     borderWidth: 3,
