@@ -75,20 +75,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         const spending = await analyticsEngine.getCategorySpending();
         setCategorySpending(spending.slice(0, 5)); // Top 5 categories
 
-        // Calculate weekly spending based on selected week
+        // Calculate weekly spending based on selected week (including recurring payments)
         const weekStart = startOfWeek(selectedWeekStart, { weekStartsOn: 1 }); // Monday start
         const weekEnd = endOfWeek(selectedWeekStart, { weekStartsOn: 1 });
         const daysInWeek = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
+        const dailyPaymentImpact = getDailyPaymentImpact();
         const dailySpending = daysInWeek.map(day => {
           const dayStr = format(day, 'yyyy-MM-dd');
-          return expenses
+          const expenseTotal = expenses
             .filter(expense => {
               // Convert Unix timestamp to Date object
               const expenseDate = format(new Date(expense.timestamp), 'yyyy-MM-dd');
               return expenseDate === dayStr;
             })
             .reduce((sum, expense) => sum + expense.amount, 0);
+          
+          // Add daily recurring payment impact to each day
+          return expenseTotal + dailyPaymentImpact;
         });
 
         setWeeklyData(dailySpending);
@@ -104,7 +108,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         const averageDailyIncome = earnings.length > 0 ? totalEarnings / earnings.length : 0;
         setAverageIncome(averageDailyIncome);
 
-        // Calculate today's spending
+        // Calculate today's spending (including recurring payments)
         const today = format(new Date(), 'yyyy-MM-dd');
         const todayExpenses = expenses
           .filter(expense => {
@@ -112,14 +116,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             return expenseDate === today;
           })
           .reduce((sum, expense) => sum + expense.amount, 0);
-        setTodaySpending(todayExpenses);
+        setTodaySpending(todayExpenses + dailyPaymentImpact);
 
-        // Calculate balance trend (current balance vs last month's balance)
+        // Calculate balance trend (current balance vs last month's balance, accounting for recurring payments)
         const currentMonth = startOfMonth(new Date());
         const prevMonth = startOfMonth(subMonths(new Date(), 1));
         const prevMonthEnd = endOfMonth(subMonths(new Date(), 1));
 
-        // Calculate last month's ending balance
+        // Calculate last month's ending balance (including recurring payment impact)
         const lastMonthEarnings = earnings
           .filter(earning => {
             const earningDate = new Date(earning.timestamp);
@@ -134,7 +138,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           })
           .reduce((sum, expense) => sum + expense.amount, 0);
 
-        const lastMonthBalance = lastMonthEarnings - lastMonthExpenses;
+        // Add recurring payment impact for the month
+        const lastMonthBalance = lastMonthEarnings - lastMonthExpenses - (dailyPaymentImpact * 30);
 
         if (lastMonthBalance > 0 && availableFunds !== lastMonthBalance) {
           const balanceChange = ((availableFunds - lastMonthBalance) / lastMonthBalance) * 100;
@@ -149,7 +154,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
         // Calculate spending and income trends based on selected period
         if (trendPeriod === 'weekly') {
-          // Weekly comparison
+          // Weekly comparison (including recurring payments)
           const currentWeekTotal = dailySpending.reduce((sum, amount) => sum + amount, 0);
           const prevWeekStart = subWeeks(weekStart, 1);
           const prevWeekEnd = subWeeks(weekEnd, 1);
@@ -157,12 +162,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           
           const prevWeekSpending = prevWeekDays.map(day => {
             const dayStr = format(day, 'yyyy-MM-dd');
-            return expenses
+            const expenseTotal = expenses
               .filter(expense => {
                 const expenseDate = format(new Date(expense.timestamp), 'yyyy-MM-dd');
                 return expenseDate === dayStr;
               })
               .reduce((sum, expense) => sum + expense.amount, 0);
+            
+            // Add daily recurring payment impact
+            return expenseTotal + dailyPaymentImpact;
           });
           
           const prevWeekTotal = prevWeekSpending.reduce((sum, amount) => sum + amount, 0);
@@ -210,27 +218,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             setIncomeTrendAmount(100);
           }
         } else {
-          // Monthly comparison
+          // Monthly comparison (including recurring payments)
           const currentMonth = startOfMonth(new Date());
           const currentMonthEnd = endOfMonth(new Date());
           const prevMonth = startOfMonth(subMonths(new Date(), 1));
           const prevMonthEnd = endOfMonth(subMonths(new Date(), 1));
 
-          // Current month spending
-          const currentMonthSpending = expenses
+          // Current month spending (expenses + recurring payments for 30 days)
+          const currentMonthExpenses = expenses
             .filter(expense => {
               const expenseDate = new Date(expense.timestamp);
               return expenseDate >= currentMonth && expenseDate <= currentMonthEnd;
             })
             .reduce((sum, expense) => sum + expense.amount, 0);
+          const currentMonthSpending = currentMonthExpenses + (dailyPaymentImpact * 30);
 
-          // Previous month spending
-          const prevMonthSpending = expenses
+          // Previous month spending (expenses + recurring payments for 30 days)
+          const prevMonthExpenses = expenses
             .filter(expense => {
               const expenseDate = new Date(expense.timestamp);
               return expenseDate >= prevMonth && expenseDate <= prevMonthEnd;
             })
             .reduce((sum, expense) => sum + expense.amount, 0);
+          const prevMonthSpending = prevMonthExpenses + (dailyPaymentImpact * 30);
 
           if (prevMonthSpending > 0) {
             const spendingChange = ((currentMonthSpending - prevMonthSpending) / prevMonthSpending) * 100;
