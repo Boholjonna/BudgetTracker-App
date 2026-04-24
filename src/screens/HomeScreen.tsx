@@ -272,7 +272,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     { title: 'Add Earning', screen: 'AddEarning' as const, icon: '+', colors: ['#4CAF50', '#45a049'] as const },
     { title: 'Add Expense', screen: 'AddExpense' as const, icon: '−', colors: ['#f44336', '#da190b'] as const },
     { title: 'Budget', screen: 'BudgetEstimator' as const, icon: '◯', colors: ['#2196F3', '#0b7dda'] as const },
-    { title: 'Payments', screen: 'Payments' as const, icon: '💳', colors: ['#FF9800', '#F57C00'] as const },
+    { title: 'Payments', screen: 'Payments' as const, icon: '▭', colors: ['#FF9800', '#F57C00'] as const },
     { title: 'Settings', screen: 'Settings' as const, icon: '⚙', colors: ['#9C27B0', '#7b1fa2'] as const },
   ];
 
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
   },
   quickActionsContainer: {
     marginBottom: 24,
-    paddingVertical: 20,
+    paddingVertical: 16,
     paddingHorizontal: 10,
     borderRadius: 16,
     marginHorizontal: -10,
@@ -679,15 +679,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
   },
   quickActionWrapper: {
     alignItems: 'center',
   },
   quickActionCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -695,19 +695,19 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   quickActionIcon: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
   },
   quickActionLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#666',
     textAlign: 'center',
-    maxWidth: 70,
+    maxWidth: 65,
   },
   quickActionsTitle: {
     fontSize: 18,
